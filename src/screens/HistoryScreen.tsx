@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { BrandHeader, EmptyState, FilterTabs, Icon, Screen } from '../components';
 import { STATUS_LABELS } from '../data';
 import { filterCustomers, formatTicket, getQueueSummary, getService } from '../queue';
@@ -7,6 +8,7 @@ import { useQueue } from '../QueueContext';
 import { colors, styles as s } from '../styles';
 
 export default function HistoryScreen() {
+  const router = useRouter();
   const { queue } = useQueue();
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all');
   const [search, setSearch] = useState('');
@@ -30,7 +32,10 @@ export default function HistoryScreen() {
         <View style={s.grow}><Text style={s.customerName}>{customer.name}</Text><Text style={s.customerMeta}>{getService(customer.serviceId).name}</Text></View>
         <View style={[s.badge, { backgroundColor: cancelled ? colors.redBg : colors.pale }]}><Text style={[s.badgeText, { color: cancelled ? colors.red : colors.green }]}>{STATUS_LABELS[customer.status]}</Text></View>
       </View><View style={s.cardFooter}><Text style={s.smallText}>{new Date(timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</Text><View style={s.row}><Icon name={cancelled ? 'close-circle-outline' : 'checkmark-circle-outline'} size={14} color={colors.muted} />
-        <Text style={s.smallText}>{new Date(timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text></View></View></View>;
+        <Text style={s.smallText}>{new Date(timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Detail ${customer.name}`} onPress={() => router.push({ pathname: '/pelanggan/[id]', params: { id: customer.id } })}>
+          <Text style={[s.cancelText, { color: colors.green }]}>Detail ›</Text>
+        </Pressable></View></View></View>;
     })}
       {customers.length === 0 && <EmptyState icon="receipt-outline" title={search ? 'Riwayat tidak ditemukan' : 'Belum ada riwayat'} text={search ? 'Coba kata pencarian yang lain.' : 'Pelanggan yang selesai atau dibatalkan akan muncul di sini.'} />}
     </View>

@@ -7,7 +7,7 @@ export const colors = {
   amberBg: '#FFF1D7', red: '#AB4D42', redBg: '#FCECE7',
 };
 
-// External styles: dipisahkan dari file layar lalu diimpor oleh komponen.
+
 export const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   appFrame: { flex: 1, width: '100%', maxWidth: 520, alignSelf: 'center' },
