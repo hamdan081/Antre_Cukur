@@ -29,7 +29,6 @@ function isTimestamp(value: unknown): value is number {
 }
 
 function sortByTicket(customers: Customer[]): Customer[] {
-  // Salin array sebelum sort supaya state semula tidak berubah.
   return [...customers].sort((first, second) => first.ticketNumber - second.ticketNumber);
 }
 

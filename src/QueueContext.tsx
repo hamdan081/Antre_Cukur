@@ -67,7 +67,7 @@ export function QueueProvider({ children }: PropsWithChildren) {
   function resetQueue(mode: 'demo' | 'empty') {
     if (!ready) return;
     commit(mode === 'demo' ? createDemoState() : createEmptyState());
-    setNotice(mode === 'demo' ? 'Lima pelanggan contoh berhasil dimuat.' : 'Antrean baru siap. Nomor dimulai dari A-001.');
+    setNotice(mode === 'demo' ? 'Tujuh pelanggan contoh berhasil dimuat.' : 'Antrean baru siap. Nomor dimulai dari A-001.');
   }
 
   return <QueueContext.Provider value={{ queue, ready, storageError, notice, runAction, resetQueue }}>{children}</QueueContext.Provider>;

@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "AntreCukur",
+    "slug": "antrecukur",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "antrecukur",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.antrecukur.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#143F36"
+      }
+    },
+    "web": {
+      "name": "AntreCukur",
+      "shortName": "AntreCukur",
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ]
+  }
+}

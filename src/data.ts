@@ -19,12 +19,12 @@ export const STATUS_LABELS = {
   cancelled: 'Dibatalkan',
 } as const;
 
-/** Lima data contoh: 1 selesai, 1 dilayani, dan 3 menunggu. */
+
 export function createDemoState(now: number = Date.now()): QueueState {
   const minute = 60_000;
 
   return {
-    nextTicket: 6,
+    nextTicket: 8,
     customers: [
       {
         id: 'antre-1',
@@ -65,6 +65,22 @@ export function createDemoState(now: number = Date.now()): QueueState {
         id: 'antre-5',
         ticketNumber: 5,
         name: 'Fajar',
+        serviceId: 'cuci',
+        status: 'waiting',
+        createdAt: now - 10 * minute,
+      },
+      {
+        id: 'antre-6',
+        ticketNumber: 6,
+        name: 'alip',
+        serviceId: 'combo',
+        status: 'waiting',
+        createdAt: now - 13 * minute,
+      },
+      {
+        id: 'antre-7',
+        ticketNumber: 7,
+        name: 'herman',
         serviceId: 'cuci',
         status: 'waiting',
         createdAt: now - 10 * minute,

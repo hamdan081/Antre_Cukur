@@ -22,15 +22,15 @@ function successState(result: QueueActionResult): QueueState {
   return result.state;
 }
 
-test('lima pelanggan demo dan estimasi mempertimbangkan sisa layanan aktif', () => {
+test('tujuh pelanggan demo dan estimasi mempertimbangkan sisa layanan aktif', () => {
   const state = createDemoState(NOW);
   const summary = getQueueSummary(state, NOW);
-  assert.equal(summary.total, 5);
-  assert.equal(summary.waiting, 3);
+  assert.equal(summary.total, 7);
+  assert.equal(summary.waiting, 5);
   assert.equal(summary.inService, 1);
   assert.equal(summary.completed, 1);
   assert.equal(summary.cancelled, 0);
-  assert.equal(summary.estimatedQueueMinutes, 75);
+  assert.equal(summary.estimatedQueueMinutes, 115);
   assert.equal(summary.currentCustomer?.name, 'Andi');
   assert.equal(summary.nextCustomer?.name, 'Budi');
   assert.equal(getEstimatedWaitMinutes(state, 'antre-3', NOW), 15);
@@ -76,8 +76,8 @@ test('panggilan selalu mengikuti nomor terkecil meski array tersimpan tidak beru
   assert.equal(next.ok, true);
   assert.equal(next.customer.ticketNumber, 3);
   assert.equal(getQueueSummary(next.state, NOW).inService, 1);
-  assert.equal(reversed.customers[3].status, 'in_service');
-  assert.deepEqual(filterCustomers(reversed, 'waiting').map((item) => item.ticketNumber), [3, 4, 5]);
+  assert.equal(reversed.customers[5].status, 'in_service');
+  assert.deepEqual(filterCustomers(reversed, 'waiting').map((item) => item.ticketNumber), [3, 4, 5, 6, 7]);
 });
 
 test('alur tambah-panggil-selesai memberikan status dan waktu yang benar', () => {
@@ -95,7 +95,7 @@ test('estimasi tidak negatif ketika layanan aktif melewati estimasi durasi', () 
   const state = createDemoState(NOW);
   assert.equal(getEstimatedWaitMinutes(state, 'antre-3', NOW + 60 * 60_000), 0);
   assert.equal(getEstimatedWaitMinutes(state, 'antre-4', NOW + 60 * 60_000), 30);
-  assert.equal(getQueueSummary(state, NOW + 60 * 60_000).estimatedQueueMinutes, 60);
+  assert.equal(getQueueSummary(state, NOW + 60 * 60_000).estimatedQueueMinutes, 100);
 });
 
 test('pemulihan menerima JSON valid dan menolak nomor/status/waktu yang rusak', () => {
