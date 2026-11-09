@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { ActionButton, BrandHeader, EmptyState, FilterTabs, Icon, Screen, formatTime } from '../components';
 import { AddCustomerDialog, ConfirmDialog } from '../dialogs';
@@ -9,6 +10,7 @@ import { colors, styles as s } from '../styles';
 import type { Customer } from '../types';
 
 export default function QueueScreen() {
+  const router = useRouter();
   const { queue, runAction, ready } = useQueue();
   const [filter, setFilter] = useState<'all' | 'waiting'>('all');
   const [search, setSearch] = useState('');
@@ -67,8 +69,15 @@ export default function QueueScreen() {
                 {/* Inline style memberi warna berdasarkan status. */}
                 <View style={[s.badge, { backgroundColor: waiting ? colors.amberBg : colors.pale }]}><Text style={[s.badgeText, { color: waiting ? colors.amber : colors.green }]}>{waiting ? STATUS_LABELS.waiting : 'Dilayani'}</Text></View>
               </View>
-              <View style={s.cardFooter}><View style={s.row}><Icon name={waiting ? 'time-outline' : 'cut-outline'} color={colors.muted} size={13} /><Text style={s.smallText}>{waiting ? `Perkiraan tunggu ${waitMinutes} menit` : 'Pelanggan sedang dilayani'}</Text></View>
-                {waiting && <Pressable accessibilityRole="button" accessibilityLabel={`Batalkan antrean ${customer.name}`} hitSlop={4} style={s.cancelButton} onPress={() => setCancelTarget(customer)}><Text style={s.cancelText}>Batalkan</Text></Pressable>}
+              <View style={s.cardFooter}><View style={[s.row, { flex: 1, flexWrap: 'wrap' }]}><Icon name={waiting ? 'time-outline' : 'cut-outline'} color={colors.muted} size={13} /><Text style={s.smallText}>{waiting ? `Perkiraan tunggu ${waitMinutes} menit` : 'Pelanggan sedang dilayani'}</Text></View>
+                <View style={s.row}>
+                  {/* Modul 2: push menumpuk halaman detail di atas halaman antrean. */}
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Detail pelanggan ${customer.name}`} hitSlop={6}
+                    style={s.cancelButton} onPress={() => router.push({ pathname: '/pelanggan/[id]', params: { id: customer.id } })}>
+                    <Text style={[s.cancelText, { color: colors.green }]}>Detail ›</Text>
+                  </Pressable>
+                  {waiting && <Pressable accessibilityRole="button" accessibilityLabel={`Batalkan antrean ${customer.name}`} hitSlop={4} style={s.cancelButton} onPress={() => setCancelTarget(customer)}><Text style={s.cancelText}>Batalkan</Text></Pressable>}
+                </View>
               </View>
             </View>;
           })}
