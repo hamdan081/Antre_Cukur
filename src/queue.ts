@@ -11,6 +11,7 @@ import type {
 } from './types';
 
 export const MAX_CUSTOMER_NAME_LENGTH = 40;
+export const MAX_BARBER_NAME_LENGTH = 40;
 
 export function isServiceId(value: unknown): value is ServiceId {
   return value === 'potong' || value === 'cuci' || value === 'combo';
@@ -40,21 +41,28 @@ export function filterCustomers(state: QueueState, filter: QueueFilter = 'all'):
   return sortByTicket(customers);
 }
 
-export function getCurrentCustomer(state: QueueState): Customer | null {
-  return state.customers.find((customer) => customer.status === 'in_service') ?? null;
+export function getCurrentCustomers(state: QueueState): Customer[] {
+  return sortByTicket(state.customers.filter((customer) => customer.status === 'in_service'));
 }
 
-export function getNextCustomer(state: QueueState): Customer | null {
-  return filterCustomers(state, 'waiting')[0] ?? null;
+export function getCurrentCustomer(state: QueueState, barberId: number): Customer | null {
+  return state.customers.find((customer) => customer.status === 'in_service' && customer.barberId === barberId) ?? null;
+}
+
+export function getNextCustomer(state: QueueState, barberId: number): Customer | null {
+  return filterCustomers(state, 'waiting').find((customer) => customer.barberId === barberId) ?? null;
 }
 
 export function addCustomer(
   state: QueueState,
   name: string,
   serviceId: string,
+  barberId: number,
+  barberName: string,
   now: number = Date.now(),
 ): QueueActionResult {
   const cleanName = name.trim().replace(/\s+/g, ' ');
+  const cleanBarberName = barberName.trim().replace(/\s+/g, ' ');
 
   if (cleanName.length === 0 || cleanName.length > MAX_CUSTOMER_NAME_LENGTH) {
     return {
@@ -66,6 +74,10 @@ export function addCustomer(
 
   if (!isServiceId(serviceId)) {
     return { ok: false, code: 'invalid_service', error: 'Pilih layanan yang tersedia.' };
+  }
+
+  if (!Number.isSafeInteger(barberId) || barberId < 1 || cleanBarberName.length === 0 || cleanBarberName.length > MAX_BARBER_NAME_LENGTH) {
+    return { ok: false, code: 'invalid_barber', error: 'Pilih kapster yang tersedia.' };
   }
 
   if (!isTimestamp(now)) {
@@ -81,6 +93,8 @@ export function addCustomer(
     ticketNumber: state.nextTicket,
     name: cleanName,
     serviceId,
+    barberId,
+    barberName: cleanBarberName,
     status: 'waiting',
     createdAt: now,
   };
@@ -92,18 +106,19 @@ export function addCustomer(
   };
 }
 
-export function callNextCustomer(state: QueueState, now: number = Date.now()): QueueActionResult {
-  if (getCurrentCustomer(state)) {
+/** Satu kapster hanya dapat menangani satu pelanggan aktif dalam satu waktu. */
+export function callNextCustomer(state: QueueState, barberId: number, now: number = Date.now()): QueueActionResult {
+  if (getCurrentCustomer(state, barberId)) {
     return {
       ok: false,
       code: 'already_serving',
-      error: 'Selesaikan pelanggan yang sedang dilayani sebelum memanggil antrean berikutnya.',
+      error: 'Kapster ini masih melayani pelanggan. Selesaikan layanan sebelum memanggil antrean berikutnya.',
     };
   }
 
-  const nextCustomer = getNextCustomer(state);
+  const nextCustomer = getNextCustomer(state, barberId);
   if (!nextCustomer) {
-    return { ok: false, code: 'no_waiting_customer', error: 'Belum ada pelanggan yang menunggu.' };
+    return { ok: false, code: 'no_waiting_customer', error: 'Belum ada pelanggan yang menunggu untuk kapster ini.' };
   }
 
   if (!isTimestamp(now) || now < nextCustomer.createdAt) {
@@ -114,10 +129,10 @@ export function callNextCustomer(state: QueueState, now: number = Date.now()): Q
   return replaceCustomer(state, customer);
 }
 
-export function finishCurrentCustomer(state: QueueState, now: number = Date.now()): QueueActionResult {
-  const currentCustomer = getCurrentCustomer(state);
+export function finishCurrentCustomer(state: QueueState, barberId: number, now: number = Date.now()): QueueActionResult {
+  const currentCustomer = getCurrentCustomer(state, barberId);
   if (!currentCustomer) {
-    return { ok: false, code: 'no_active_customer', error: 'Belum ada pelanggan yang sedang dilayani.' };
+    return { ok: false, code: 'no_active_customer', error: 'Kapster ini belum memiliki pelanggan yang sedang dilayani.' };
   }
 
   if (!isTimestamp(now) || now < (currentCustomer.startedAt ?? currentCustomer.createdAt)) {
@@ -161,7 +176,7 @@ function replaceCustomer(state: QueueState, customer: Customer): QueueActionResu
   };
 }
 
-/** Estimasi pelanggan aktif memakai sisa durasi layanan, dibulatkan ke atas. */
+/** Estimasi sisa durasi pelanggan aktif berdasarkan layanan yang dipilih. */
 export function getRemainingServiceMinutes(customer: Customer, now: number = Date.now()): number {
   const duration = getService(customer.serviceId).durationMinutes;
   if (customer.status !== 'in_service' || customer.startedAt === undefined) return duration;
@@ -170,7 +185,7 @@ export function getRemainingServiceMinutes(customer: Customer, now: number = Dat
   return Math.max(0, Math.ceil(duration - elapsedMinutes));
 }
 
-/** Waktu tunggu tidak memasukkan durasi layanan pelanggan itu sendiri. */
+/** Estimasi waktu tunggu dihitung hanya dari antrean kapster yang dipilih. */
 export function getEstimatedWaitMinutes(
   state: QueueState,
   customerId: string,
@@ -180,10 +195,11 @@ export function getEstimatedWaitMinutes(
   if (!customer || customer.status === 'completed' || customer.status === 'cancelled') return null;
   if (customer.status === 'in_service') return 0;
 
-  const currentCustomer = getCurrentCustomer(state);
+  const currentCustomer = getCurrentCustomer(state, customer.barberId);
   let minutes = currentCustomer ? getRemainingServiceMinutes(currentCustomer, now) : 0;
 
   for (const waitingCustomer of filterCustomers(state, 'waiting')) {
+    if (waitingCustomer.barberId !== customer.barberId) continue;
     if (waitingCustomer.id === customerId) break;
     minutes += getService(waitingCustomer.serviceId).durationMinutes;
   }
@@ -192,23 +208,29 @@ export function getEstimatedWaitMinutes(
 }
 
 export function getQueueSummary(state: QueueState, now: number = Date.now()): QueueSummary {
-  const currentCustomer = getCurrentCustomer(state);
+  const currentCustomers = getCurrentCustomers(state);
   const waitingCustomers = filterCustomers(state, 'waiting');
-  let estimatedQueueMinutes = currentCustomer ? getRemainingServiceMinutes(currentCustomer, now) : 0;
+  const barberIds = new Set(state.customers.map((customer) => customer.barberId));
+  let estimatedQueueMinutes = 0;
 
-  // Loop ini juga menjadi contoh custom function dan perulangan untuk demo.
-  for (const customer of waitingCustomers) {
-    estimatedQueueMinutes += getService(customer.serviceId).durationMinutes;
+  // Beban antrean ditampilkan sebagai estimasi terlama dari seluruh kapster.
+  for (const barberId of barberIds) {
+    const current = getCurrentCustomer(state, barberId);
+    let workload = current ? getRemainingServiceMinutes(current, now) : 0;
+    for (const customer of waitingCustomers) {
+      if (customer.barberId === barberId) workload += getService(customer.serviceId).durationMinutes;
+    }
+    estimatedQueueMinutes = Math.max(estimatedQueueMinutes, workload);
   }
 
   return {
     total: state.customers.length,
     waiting: waitingCustomers.length,
-    inService: currentCustomer ? 1 : 0,
+    inService: currentCustomers.length,
     completed: state.customers.filter((customer) => customer.status === 'completed').length,
     cancelled: state.customers.filter((customer) => customer.status === 'cancelled').length,
     estimatedQueueMinutes,
-    currentCustomer,
+    currentCustomers,
     nextCustomer: waitingCustomers[0] ?? null,
   };
 }
@@ -229,8 +251,12 @@ function isCustomer(value: unknown): value is Customer {
     !isServiceId(item.serviceId) || !isCustomerStatus(item.status) || !isTimestamp(item.createdAt)
   ) return false;
 
+  // barberId/barberName boleh kosong pada data versi 1; akan dimigrasikan saat restore.
+  if (item.barberId !== undefined && (!Number.isSafeInteger(item.barberId) || (item.barberId as number) < 1)) return false;
+  if (item.barberName !== undefined && (typeof item.barberName !== 'string' || item.barberName.trim().length === 0 || item.barberName.length > MAX_BARBER_NAME_LENGTH)) return false;
+
   for (const key of ['startedAt', 'completedAt', 'cancelledAt']) {
-    if (item[key] !== undefined && (!isTimestamp(item[key]) || item[key] < item.createdAt)) return false;
+    if (item[key] !== undefined && (!isTimestamp(item[key]) || (item[key] as number) < (item.createdAt as number))) return false;
   }
 
   if (item.status === 'waiting') {
@@ -241,12 +267,12 @@ function isCustomer(value: unknown): value is Customer {
   }
   if (item.status === 'completed') {
     return isTimestamp(item.startedAt) && isTimestamp(item.completedAt) &&
-      item.completedAt >= item.startedAt && item.cancelledAt === undefined;
+      (item.completedAt as number) >= (item.startedAt as number) && item.cancelledAt === undefined;
   }
   return isTimestamp(item.cancelledAt) && item.startedAt === undefined && item.completedAt === undefined;
 }
 
-/** Data penyimpanan diperiksa sebelum dipakai; null berarti gunakan data awal. */
+/** Data versi lama dimigrasikan ke Kapster 1; state baru mendukung satu layanan aktif per kapster. */
 export function restoreQueueState(value: unknown): QueueState | null {
   if (typeof value !== 'object' || value === null) return null;
   const candidate = value as Record<string, unknown>;
@@ -255,17 +281,23 @@ export function restoreQueueState(value: unknown): QueueState | null {
     !Number.isSafeInteger(candidate.nextTicket) || (candidate.nextTicket as number) < 1
   ) return null;
 
-  const customers = candidate.customers as Customer[];
+  const customers = (candidate.customers as (Customer & { barberId?: number; barberName?: string })[]).map((customer) => ({
+    ...customer,
+    barberId: customer.barberId ?? 1,
+    barberName: customer.barberName ?? `Kapster ${customer.barberId ?? 1}`,
+  }));
   const tickets = new Set<number>();
-  let activeCount = 0;
+  const activeBarbers = new Set<number>();
 
   for (const customer of customers) {
     if (tickets.has(customer.ticketNumber) || customer.ticketNumber >= (candidate.nextTicket as number)) return null;
     tickets.add(customer.ticketNumber);
-    if (customer.status === 'in_service') activeCount += 1;
+    if (customer.status === 'in_service') {
+      if (activeBarbers.has(customer.barberId)) return null;
+      activeBarbers.add(customer.barberId);
+    }
   }
 
-  if (activeCount > 1) return null;
   return {
     customers: sortByTicket(customers.map((customer) => ({ ...customer }))),
     nextTicket: candidate.nextTicket as number,

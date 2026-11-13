@@ -16,7 +16,7 @@ interface QueueContextValue {
 const QueueContext = createContext<QueueContextValue | null>(null);
 
 export function QueueProvider({ children }: PropsWithChildren) {
-  const [queue, setQueue] = useState<QueueState>(createDemoState);
+  const [queue, setQueue] = useState<QueueState>(createEmptyState);
   const [ready, setReady] = useState(false);
   const [storageError, setStorageError] = useState(false);
   const [notice, setNotice] = useState('');
@@ -29,11 +29,13 @@ export function QueueProvider({ children }: PropsWithChildren) {
       if (!mounted) return;
       if (saved) { stateRef.current = saved; setQueue(saved); }
       else {
+        stateRef.current = createEmptyState();
+        setQueue(stateRef.current);
         try { await saveQueue(stateRef.current); }
-        catch { if (mounted) { setStorageError(true); setNotice('Data contoh belum tersimpan di perangkat.'); } }
+        catch { if (mounted) { setStorageError(true); setNotice('Antrean baru belum tersimpan di perangkat.'); } }
       }
     }).catch(() => {
-      if (mounted) { setStorageError(true); setNotice('Data tersimpan gagal dibaca. Data contoh ditampilkan.'); }
+      if (mounted) { setStorageError(true); setNotice('Data tersimpan gagal dibaca. Antrean kosong ditampilkan.'); }
     }).finally(() => { if (mounted) setReady(true); });
     return () => { mounted = false; };
   }, []);

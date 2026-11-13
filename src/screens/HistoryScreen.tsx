@@ -29,7 +29,7 @@ export default function HistoryScreen() {
       const timestamp = customer.completedAt ?? customer.cancelledAt ?? customer.createdAt;
       return <View style={s.customer} key={customer.id}><View style={s.row}>
         <View style={s.ticketBox}><Text style={s.ticketSmall}>{formatTicket(customer.ticketNumber)}</Text></View>
-        <View style={s.grow}><Text style={s.customerName}>{customer.name}</Text><Text style={s.customerMeta}>{getService(customer.serviceId).name}</Text></View>
+        <View style={s.grow}><Text style={s.customerName}>{customer.name}</Text><Text style={s.customerMeta}>{getService(customer.serviceId).name} · {customer.barberName}</Text></View>
         <View style={[s.badge, { backgroundColor: cancelled ? colors.redBg : colors.pale }]}><Text style={[s.badgeText, { color: cancelled ? colors.red : colors.green }]}>{STATUS_LABELS[customer.status]}</Text></View>
       </View><View style={s.cardFooter}><Text style={s.smallText}>{new Date(timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</Text><View style={s.row}><Icon name={cancelled ? 'close-circle-outline' : 'checkmark-circle-outline'} size={14} color={colors.muted} />
         <Text style={s.smallText}>{new Date(timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text>

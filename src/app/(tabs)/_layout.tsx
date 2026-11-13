@@ -18,3 +18,7 @@ export default function TabLayout() {
     <Tabs.Screen name="riwayat" options={{ title: 'Riwayat', tabBarIcon: ({ color }) => <Icon name="receipt-outline" color={color} size={22} /> }} />
     <Tabs.Screen name="layanan" options={{ title: 'Layanan', tabBarIcon: ({ color }) => <Icon name="cut-outline" color={color} size={22} /> }} />
   </Tabs>;
+}
+
+// 1. buat dua tombol dengan inline style
+// 2. tambahkan 2 data sesuai projek

@@ -55,6 +55,7 @@ export default function CustomerDetailScreen() {
       </View>
       <Text style={s.sectionTitle}>{customer.name}</Text>
       <View style={s.between}><Text style={s.customerMeta}>Layanan</Text><Text style={s.amount}>{service.name}</Text></View>
+      <View style={s.between}><Text style={s.customerMeta}>Kapster</Text><Text style={s.amount}>{customer.barberName}</Text></View>
       <View style={s.between}><Text style={s.customerMeta}>Harga</Text><Text style={s.amount}>{formatRupiah(service.price)}</Text></View>
       <View style={s.between}><Text style={s.customerMeta}>Durasi layanan</Text><Text style={s.amount}>{service.durationMinutes} menit</Text></View>
       <View style={s.between}><Text style={s.customerMeta}>Masuk antrean</Text><Text style={s.amount}>{formatTime(customer.createdAt)}</Text></View>

@@ -1,14 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps, PropsWithChildren } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import type { ColorValue } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueue } from './QueueContext';
 import { colors, styles as s } from './styles';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
-export function Icon({ name, color = colors.green, size = 20 }: { name: IconName; color?: ColorValue; size?: number }) {
-  return <Ionicons name={name} size={size} color={color} />;
+export function Icon({ name, color = colors.green, size = 20 }: { name: IconName; color?: any; size?: number }) {
+  return <Ionicons name={name} size={size} color={color ?? colors.green} />;
 }
 
 export function ActionButton({ title, onPress, icon, light = false, outline = false, disabled = false }: {
@@ -25,8 +24,8 @@ export function ActionButton({ title, onPress, icon, light = false, outline = fa
 export function BrandHeader() {
   return <View style={s.header}>
     <View style={s.logo}><Icon name="cut-outline" color={colors.mint} size={25} /></View>
-    <View style={s.grow}><Text style={s.brand}>AntreCukur</Text><Text style={[s.eyebrow, { marginTop: 3 }]}>BARBERSHOP QUEUE</Text></View>
-    <View style={s.dateChip}><Text style={s.dateText}>Offline</Text></View>
+    <View style={s.grow}><Text style={s.brand}>AntreCukur</Text><Text style={[s.eyebrow, { marginTop: 3 }]}>MANAJEMEN ANTREAN</Text></View>
+    <View style={s.dateChip}><Text style={s.dateText}>Antrean Lokal</Text></View>
   </View>;
 }
 
