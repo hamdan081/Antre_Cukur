@@ -1,3 +1,6 @@
+/**
+ * Modul 3: Pengujian unit test untuk integrasi External API DummyJSON dan Promise availability check.
+ */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {

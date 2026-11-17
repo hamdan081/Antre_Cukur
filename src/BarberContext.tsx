@@ -1,3 +1,6 @@
+/**
+ * Modul 3: BarberContext untuk mengelola state asynchronous profil kapster (API DummyJSON & offline fallback).
+ */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import { fetchBarbersFromApi, getFallbackBarbers } from './services/barberService';

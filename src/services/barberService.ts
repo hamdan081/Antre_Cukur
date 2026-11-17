@@ -2,7 +2,8 @@ import { LOCAL_BARBERS } from '../data';
 import type { AvailabilityCheckResult, Barber, ExternalUserApiResponse } from '../types';
 
 /**
- * Modul 3: External API, Custom Async Function, Promise, resolve/reject, dan .then().
+ * Modul 3: Integrasi External API DummyJSON, Custom Async Function, Promise resolve/reject, dan .then()/.catch().
+ * Mengelola pemanggilan profil data eksternal kapster dan simulasi asynchronous availability check.
  * Profil DummyJSON dipakai sebagai data contoh untuk roster demo, bukan data pegawai nyata.
  */
 const API_ENDPOINT = 'https://dummyjson.com/users?limit=6&select=firstName,lastName,email,phone,image,hair';

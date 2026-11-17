@@ -1,3 +1,6 @@
+/**
+ * Modul 3: Screen Tim Kapster dengan pemanggilan API DummyJSON dan simulasi Promise availability check.
+ */
 import { useState } from 'react';
 import {
   ActivityIndicator,
